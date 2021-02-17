@@ -40,8 +40,12 @@ These settings correspond to your storage zone's *Username* and *Password* found
 
 You must include `BUNNY_REGION` if the default region, **NY**, does not match the region you set yourself. 
 
-3. Change your default file storage backend.
+3. Change your media url and default file storage backend.
 
 ```python
 DEFAULT_FILE_STORAGE = 'django_bunny_storage.storage.BunnyStorage'
+
+MEDIA_URL = 'https://myzone.b-cdn.net/myzone/media/'
 ```
+
+The `MEDIA_URL` is set based on a linked Pull Zone that you setup in the Bunny.net dashboard.
