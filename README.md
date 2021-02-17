@@ -31,9 +31,14 @@ INSTALLED_APPS = [
 BUNNY_USERNAME = 'myzone'
 
 BUNNY_PASSWORD = 'myzone-random-password-string'
+
+# Optional
+BUNNY_REGION = 'de'
 ```
 
 These settings correspond to your storage zone's *Username* and *Password* found under FTP & API Access in your Bunny.net Storage dashboard.
+
+You must include `BUNNY_REGION` if the default region, **NY**, does not match the region you set yourself. 
 
 3. Change your default file storage backend.
 
