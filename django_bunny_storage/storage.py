@@ -1,5 +1,3 @@
-from typing import Dict
-
 from django.conf import settings
 from django.core.files import File
 from django.core.files.storage import Storage
@@ -12,12 +10,12 @@ class BunnyStorage(Storage):
     """ Implementation of Django's storage module using Bunny.net. 
     """
 
-    username: str = None
-    password: str = None
-    region: str = None
+    username = None
+    password = None
+    region = None
 
-    base_url: str = None
-    headers: Dict = None
+    base_url = None
+    headers = None
 
     def __init__(self):
         if not settings.BUNNY_USERNAME:
