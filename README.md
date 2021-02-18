@@ -52,7 +52,7 @@ The `MEDIA_URL` is set based on a linked Pull Zone that you setup in the Bunny.n
 
 #### In Templates
 
-In order to display your media properly in templates, refer to Django's [docs on the MEDIA_URL attribute](https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-MEDIA_URL) to ensure you're not getting 404s whenn trying to load media.
+In order to display your media properly in templates, refer to Django's [docs on the MEDIA_URL attribute](https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-MEDIA_URL) to ensure you're not getting 404s when trying to load media.
 
 Whenever referencing media, do
 
