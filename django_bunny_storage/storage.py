@@ -34,7 +34,7 @@ class BunnyStorage(Storage):
             if self.region == 'de':
                 self.base_url += 'https://storage.bunnycdn.com/'
             else:
-                self.base_url += f'https://{self.region}.bunnycdn.com/'
+                self.base_url += f'https://{self.region}.storage.bunnycdn.com/'
         else:
             self.base_url += 'https://storage.bunnycdn.com/'
 
@@ -54,7 +54,7 @@ class BunnyStorage(Storage):
     def _open(self, name, mode='rb'):
         resp = requests.get(self.base_url + name, headers=self.headers)
 
-        if resp.status == 404:
+        if resp.status_code == 404:
             raise ValueError('File not found.')
 
         return File(resp.content)
@@ -67,7 +67,7 @@ class BunnyStorage(Storage):
     def exists(self, name):
         resp = requests.get(self.base_url + name, headers=self.headers)
 
-        if resp.status == 404:
+        if resp.status_code == 404:
             return False
 
         return True

@@ -20,6 +20,8 @@ BUNNY_REGION = os.environ.get('BUNNY_REGION')
 
 DEFAULT_FILE_STORAGE = "django_bunny_storage.storage.BunnyStorage"
 
+MEDIA_URL = os.environ.get('MEDIA_URL')
+
 
 # Application definition
 

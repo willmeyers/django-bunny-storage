@@ -45,7 +45,17 @@ You must include `BUNNY_REGION` if the default region, **NY**, does not match th
 ```python
 DEFAULT_FILE_STORAGE = 'django_bunny_storage.storage.BunnyStorage'
 
-MEDIA_URL = 'https://myzone.b-cdn.net/myzone/media/'
+MEDIA_URL = 'https://myzone.b-cdn.net/' # The Pull Zone hostname.
 ```
 
 The `MEDIA_URL` is set based on a linked Pull Zone that you setup in the Bunny.net dashboard.
+
+#### In Templates
+
+In order to display your media properly in templates, refer to Django's [docs on the MEDIA_URL attribute](https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-MEDIA_URL) to ensure you're not getting 404s whenn trying to load media.
+
+Whenever referencing media, do
+
+```html
+<img src="{{ MEDIA_URL }}{{ mymodel.file }}" />
+```
