@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.utils._os import safe_join
 from django.core.files import File
 from django.core.files.storage import Storage
 from django.core.exceptions import ImproperlyConfigured
@@ -43,7 +44,12 @@ class BunnyStorage(Storage):
         self.headers = {
             'AccessKey': self.password
         }
-
+        
+    def _full_path(self, name):
+        if name == '/':
+            name = ''
+        return safe_join(self.base_url, name).replace('\\', '/')
+    
     def _save(self, name, content):
         resp = requests.put(self.base_url + name, data=content, headers=self.headers)
 
@@ -69,3 +75,7 @@ class BunnyStorage(Storage):
             return False
 
         return True
+    
+    def url(self, name):
+        return self._full_path(f'/media/{name}')
+    
