@@ -3,6 +3,7 @@ from django.utils._os import safe_join
 from django.core.files import File
 from django.core.files.storage import Storage
 from django.core.exceptions import ImproperlyConfigured
+from urllib.parse import urljoin
 
 import requests
 
@@ -48,7 +49,8 @@ class BunnyStorage(Storage):
     def _full_path(self, name):
         if name == '/':
             name = ''
-        return safe_join(self.base_url, name).replace('\\', '/')
+        # return safe_join(self.base_url, name).replace('\\', '/')
+        return urljoin(self.base_url, name).replace('\\', '/')
     
     def _save(self, name, content):
         resp = requests.put(self.base_url + name, data=content, headers=self.headers)
