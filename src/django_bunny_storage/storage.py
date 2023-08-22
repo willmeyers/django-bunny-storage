@@ -70,11 +70,6 @@ class BunnyStorage(Storage):
 
         return name
 
-    def url(self, name):
-        resp = requests.get(self.base_url + name, headers=self.headers)
-
-        return settings.MEDIA_URL + name
-
     def exists(self, name):
         resp = requests.get(self.base_url + name, headers=self.headers)
 
