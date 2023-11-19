@@ -1,5 +1,4 @@
 import os
-import uuid
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -8,7 +7,6 @@ SECRET_KEY = 'test'
 USE_TZ = True
 
 TIME_ZONE = 'UTC'
-
 
 # Bunny.net settings.
 
@@ -22,7 +20,6 @@ DEFAULT_FILE_STORAGE = "django_bunny_storage.storage.BunnyStorage"
 
 MEDIA_URL = os.environ.get('MEDIA_URL')
 
-
 # Application definition
 
 INSTALLED_APPS = (
@@ -30,7 +27,6 @@ INSTALLED_APPS = (
     'django_bunny_storage',
     'django_bunny_storage_test_app',
 )
-
 
 # Database
 # https://docs.djangoproject.com/en/1.7/ref/settings/#databases
@@ -40,4 +36,25 @@ DATABASES = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
     }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s %(levelname)-8s %(name)-34s %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default'
+        },
+    },
+    'root': {
+        'handlers': ('console',),
+        'level': 'DEBUG',
+    },
 }

@@ -14,9 +14,7 @@ pip install django-bunny-storage
 
 Everything is configured in your `settings.py` file.
 
-To use:
-
-1. Add `django_bunny_storage` to your `INSTALLED_APPS`.
+### Enable application
 
 ```python
 INSTALLED_APPS = [
@@ -25,37 +23,66 @@ INSTALLED_APPS = [
 ]
 ```
 
-2. Add `BUNNY_USERNAME` and `BUNNY_PASSWORD` to your settings.
+### Set default storage and credentials
 
 ```python
-BUNNY_USERNAME = 'myzone'
-
-BUNNY_PASSWORD = 'myzone-random-password-string'
-
-# Optional
-BUNNY_REGION = 'de'
-```
-
-These settings correspond to your storage zone's *Username* and *Password* found under FTP & API Access in your Bunny.net Storage dashboard.
-
-You must include `BUNNY_REGION` if the default region, **NY**, does not match the region you set yourself. 
-
-3. Change your media url and default file storage backend.
-
-```python
+# for Django < 4.2
 DEFAULT_FILE_STORAGE = 'django_bunny_storage.storage.BunnyStorage'
+BUNNY_USERNAME = 'myusername'
+BUNNY_PASSWORD = 'my-random-password-string'
+BUNNY_PULL_ZONE = 'https://myzone.b-cdn.net/'  # Optional, defaults to MEDIA_URL
+BUNNY_REGION = 'de'  # Optional
 
-MEDIA_URL = 'https://myzone.b-cdn.net/' # The Pull Zone hostname.
+# for Django >= 4.2
+STORAGES = {
+    'default': {
+        'BACKEND': 'django_bunny_storage.storage.BunnyStorage',
+        'OPTIONS': {
+            'username': 'myusername',
+            'password': 'my-random-string-password',
+            'pull_zone': 'https://myzone.b-cdn.net',  # Optional, defaults to MEDIA_URL
+            'region': 'de'  # Optional
+        }
+    },
+}
 ```
 
-The `MEDIA_URL` is set based on a linked Pull Zone that you setup in the Bunny.net dashboard.
+Username and password can be found under FTP & API Access in your [Storage dashboard](https://dash.bunny.net/storage).
+
+List of available regions can be
+found [here](https://docs.bunny.net/reference/put_-storagezonename-path-filename#api-base-endpoint).
+Or you can see it also under FTP & API Access as two-letter prefix of hostname. Missing prefix is default `de` region.
+
+You can either set pull zone in storage config or set it to `MEDIA_URL`, depending on your needs.
+
+### Change your media url.
+
+```python
+MEDIA_URL = 'https://myzone.b-cdn.net/'
+```
+
+The `MEDIA_URL` is set based on a linked Pull Zone that you set up in
+the [CDN dashboard](https://dash.bunny.net/storage).
+You can use any domain linked to your Pull, either default or custom.
 
 #### In Templates
 
-In order to display your media properly in templates, refer to Django's [docs on the MEDIA_URL attribute](https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-MEDIA_URL) to ensure you're not getting 404s when trying to load media.
-
-Whenever referencing media, do
+Correct `MEDIA_URL` or pull zone allows you to use the convenience `url` attribute provided by Django.
 
 ```html
-<img src="{{ MEDIA_URL }}{{ mymodel.file }}" />
+<img src="{{ mymodel.file.url }}"/>
+```
+
+## Test
+
+Integration tests can be found in `tests` directory. That's a stub application to run Django tests.
+The only test tries to upload, download and delete file from storage, so it requires Bunny CDN credentials.
+
+```bash
+export BUNNY_USERNAME=myusername
+export BUNNY_PASSWORD=my-random-string-password
+export MEDIA_URL=https://myzone.b-cdn.net/
+
+cd tests
+python manage.py test
 ```
