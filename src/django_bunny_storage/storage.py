@@ -1,81 +1,88 @@
-from django.conf import settings
-from django.utils._os import safe_join
-from django.core.files import File
-from django.core.files.storage import Storage
-from django.core.exceptions import ImproperlyConfigured
+import logging
+from urllib.parse import urljoin
 
 import requests
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+from django.core.files import File
+from django.core.files.storage import Storage
 
 
 class BunnyStorage(Storage):
     """ Implementation of Django's storage module using Bunny.net. 
     """
+    _log = logging.getLogger(__name__)
 
-    username = None
-    password = None
-    region = None
+    def __init__(self, username: str = None, password: str = None, pull_zone: str = None, region: str = 'de'):
+        _username = getattr(settings, 'BUNNY_USERNAME', username)
+        if _username is None:
+            raise ImproperlyConfigured('Setting BUNNY_USERNAME or OPTIONS.username is required.')
 
-    base_url = None
-    headers = None
+        _password = getattr(settings, 'BUNNY_PASSWORD', password)
+        if _password is None:
+            raise ImproperlyConfigured('Setting BUNNY_PASSWORD or OPTIONS.password is required.')
 
-    def __init__(self):
-        if not settings.BUNNY_USERNAME:
-            raise ImproperlyConfigured('Setting BUNNY_USERNAME is required.')
+        self.pull_base_url = getattr(settings, 'BUNNY_PULL_ZONE', pull_zone) or settings.MEDIA_URL
+        if self.pull_base_url is None:
+            raise ImproperlyConfigured('Setting BUNNY_PULL_ZONE or OPTIONS.pull_zone or MEDIA_URL is required.')
 
-        if not settings.BUNNY_PASSWORD:
-            raise ImproperlyConfigured('Setting BUNNY_PASSWORD is required.')
+        storage_zone_host = 'storage.bunnycdn.com'
+        if hasattr(settings, 'BUNNY_REGION') and settings.BUNNY_REGION is not None and settings.BUNNY_REGION != 'de':
+            storage_zone_host = f'{settings.BUNNY_REGION}.{storage_zone_host}'
 
-        self.base_url = ''
+        self.storage_base_url = f'https://{storage_zone_host}/{_username}/'
 
-        if settings.BUNNY_REGION:
-            self.region = settings.BUNNY_REGION
+        self._session = requests.Session()
+        self._session.headers['AccessKey'] = _password
 
-            if self.region == 'de':
-                self.base_url += 'https://storage.bunnycdn.com/'
-            else:
-                self.base_url += f'https://{self.region}.storage.bunnycdn.com/'
-        else:
-            self.base_url += 'https://storage.bunnycdn.com/'
+        self._log.debug('Initialized with storage zone %s and pull zone %s', self.storage_base_url, self.pull_base_url)
 
-        self.username = settings.BUNNY_USERNAME
-        self.password = settings.BUNNY_PASSWORD
+    def __request(self, method: str, name: str, **kwargs):
+        response = self._session.request(method, self.storage_base_url + name, **kwargs)
+        if response.status_code == 401:
+            raise ImproperlyConfigured('Failed to authorize to Bunny CDN storage, please check your credentials')
 
-        self.base_url += f'{self.username}/'
-        self.headers = {
-            'AccessKey': self.password
-        }
-        
-    def _full_path(self, name):
-        if name == '/':
-            name = ''
-        return safe_join(self.base_url, name).replace('\\', '/')
-    
+        return response
+
     def _save(self, name, content):
-        resp = requests.put(self.base_url + name, data=content, headers=self.headers)
+        resp = self.__request('PUT', name, data=content)
 
-        return name
+        if resp.ok:
+            return name
+        else:
+            raise RuntimeError(f'Failed to upload file {name}')
 
     def _open(self, name, mode='rb'):
-        resp = requests.get(self.base_url + name, headers=self.headers)
+        resp = self.__request('GET', name, stream=True)
 
         if resp.status_code == 404:
-            raise ValueError('File not found.')
+            raise ValueError(f'File not found: {name}')
 
-        return File(resp.content)
+        return File(resp.raw)
 
     def delete(self, name):
-        resp = requests.delete(self.base_url + name, headers=self.headers)
+        resp = self.__request('DELETE', name)
 
-        return name
+        if resp.ok:
+            return name
+        else:
+            raise RuntimeError(f'Failed to delete file {name}')
 
     def exists(self, name):
-        resp = requests.get(self.base_url + name, headers=self.headers)
+        resp = self.__request('DESCRIBE', name)
 
         if resp.status_code == 404:
             return False
 
         return True
-    
+
+    def size(self, name):
+        resp = self.__request('DESCRIBE', name)
+
+        if resp.status_code == 404:
+            raise ValueError(f'File not found: {name}')
+
+        return resp.json()['Length']
+
     def url(self, name):
-        return self._full_path(f'/media/{name}')
-    
+        return urljoin(self.pull_base_url, name)
